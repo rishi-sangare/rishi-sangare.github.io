@@ -10,10 +10,10 @@ const jobs = [
   {
     role: "AI / Backend Engineer", org: "LD Technologies", when: "Feb 2025 – present", where: "Remote · full-time",
     points: [
-      "Built the AI matching service for a large Japanese recruiting database: FastAPI, Elasticsearch retrieval with filters, a 3-turn LLM pre-screening flow (EN/JA) with idempotent sessions and HMAC-signed webhooks. 253 commits, 128 PRs.",
+      "Built the whole AI matching workflow (jobs to candidates and candidates to jobs) for a large Japanese recruiting database, after building its first search on a vector database with a re-ranking model: FastAPI, Elasticsearch retrieval with filters, a 3-turn LLM pre-screening flow (EN/JA) with idempotent sessions and HMAC-signed webhooks. 253 commits, 128 PRs.",
       "Rebuilt a filter-aware eval golden set, showing real recall@10 was 0.57, not 0.19, on identical outputs. Cut degenerate clarifying questions from 85% to 0% (verified on 72 live scenarios).",
       "Ran an LLM reranker trial (48k judgements for $2.31) with holdout and bias audit; caught my own inflated +30% and reported +12.9%.",
-      "Co-led engineering on RefineCV, a B2B CV-formatting SaaS (FastAPI, React 19, Supabase, WeasyPrint): 435 commits and 203 PRs in 5 months. Fixed a cross-tenant authorization flaw across 63 call sites; found the cause of production 500s (sync PDF rendering starving the event loop). Picked the AI assistant's model via a 24-model, 3,162-turn bake-off.",
+      "Sole engineer on RefineCV, working with the founder: a B2B CV-formatting SaaS (FastAPI, React 19, Supabase, WeasyPrint): 435 commits and 203 PRs in 5 months. Fixed a cross-tenant authorization flaw across 63 call sites; found the cause of production 500s (sync PDF rendering starving the event loop). Picked the AI assistant's model via a 24-model, 3,162-turn bake-off.",
       "Built v1 of Recruiter Copilot (Chrome MV3 + Supabase Edge Functions) and shipped 11 Web Store releases (400+ installs); closed a cross-account RLS leak and a billing exploit.",
       "Sole engineer on a CRM migration for a UK agency: 18 GB keyless SQL Server → REST-only CRM. 253,541 activities, 36,661 people, 0 missing, 99.97% exact on reconciliation.",
     ],

@@ -56,7 +56,7 @@ export const projects: Project[] = [
     slug: "tamago",
     title: "LLM matching for a Japanese recruiting platform",
     org: "LD Technologies · for Tamago",
-    role: "Backend / LLM engineer on a team of 3",
+    role: "Built the matching workflow end to end (a teammate owned the CV parser)",
     when: "Oct 2025 – now",
     line: "Recruiters type a job description and get a ranked shortlist with reasons, in English and Japanese, fast enough to use live.",
     numbers: [
@@ -68,6 +68,8 @@ export const projects: Project[] = [
     sections: [
       { h: "The problem", body: "A large Japanese recruiting database wanted recruiters to type a job description, or pick a candidate, and get a ranked shortlist with reasons. It had to work in English and Japanese and be fast enough to use live." },
       { h: "What I built", items: [
+        "The first version: search on a vector database (AWS OpenSearch, hybrid retrieval) with a re-ranking model, which I later rebuilt into the current system.",
+        "The whole matching workflow, in both directions: a recruiter starts from a job and gets candidates, or starts from a candidate and gets jobs.",
         "The service foundation: FastAPI, Docker, Caddy/TLS, GitHub Actions to GHCR to staging and production, with Slack alerts.",
         "Retrieval: Elasticsearch (kuromoji for Japanese) with wage/currency, language, age, experience and excluded-company filters, routed per tenant.",
         "Interactive pre-screening, in two flows: the LLM asks clarifying questions and a deal-breaker question, classifies the answers in parallel, then runs retrieval and parallel LLM evaluation in the background and calls back with an HMAC-signed webhook. Sessions are idempotent, with status guards and TTLs.",
@@ -107,7 +109,7 @@ export const projects: Project[] = [
     slug: "refinecv",
     title: "RefineCV",
     org: "LD Technologies · in-house product",
-    role: "Co-lead engineer",
+    role: "Sole engineer, working with the founder: product and marketing site",
     when: "May – Sep 2026",
     line: "A B2B SaaS that turns any CV (PDF, DOCX, scans) into an agency-branded document, sold to recruitment agencies.",
     numbers: [
@@ -127,7 +129,7 @@ export const projects: Project[] = [
         "An LLM-provider watchdog (/health/llm plus Slack) that discovered the production fallback model had been silently dead.",
         "A parsing-faithfulness scorecard on every deploy, Playwright end-to-end tests (12 staging and 10 production smoke flows), and a manual QA run system.",
       ] },
-      { h: "Product", body: "On-canvas WYSIWYG editing with rich text, CV import, cover pages, an onboarding tour, OTP password reset, and credit and billing fixes." },
+      { h: "Product", body: "On-canvas WYSIWYG editing with rich text, CV import, cover pages, an onboarding tour, OTP password reset, and credit and billing fixes. I also designed and built its marketing website." },
     ],
     stack: ["FastAPI", "WeasyPrint", "Jinja2", "React 19", "TypeScript", "Vite", "Zustand", "TanStack Query", "Tailwind", "Supabase", "Docker", "Caddy", "Cloudflare", "GitHub Actions", "Playwright", "pytest"],
     links: [{ href: "https://github.com/rishi-sangare/case-studies/blob/main/refinecv.md", label: "Long-form write-up" }],
@@ -136,7 +138,7 @@ export const projects: Project[] = [
     slug: "recruiter-copilot",
     title: "Recruiter Copilot",
     org: "LD Technologies · in-house product",
-    role: "Built v1, then product owner for releases 1.0.11 – 1.0.21",
+    role: "Built it end to end; owned releases 1.0.11 – 1.0.21",
     when: "2025 – 2026",
     line: "A Chrome extension that scores every LinkedIn profile 0–100 against a job description, with pros and cons.",
     numbers: [

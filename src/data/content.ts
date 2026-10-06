@@ -118,7 +118,7 @@ export const scenes: Scene[] = [
     project: "RefineCV · Recruiter Copilot",
     kicker: "Shipped, owned, on-call",
     story: [
-      "RefineCV turns any CV into an agency-branded document (FastAPI, React 19, Supabase, WeasyPrint). I co-led engineering: 435 commits and 203 PRs in five months, a cross-tenant authorization fix across 63 call sites, and the root cause of random 500s (PDF rendering starving the event loop).",
+      "RefineCV turns any CV into an agency-branded document (FastAPI, React 19, Supabase, WeasyPrint). I was the sole engineer: 435 commits and 203 PRs in five months, a cross-tenant authorization fix across 63 call sites, and the root cause of random 500s (PDF rendering starving the event loop).",
       "Recruiter Copilot is a Chrome extension that scores LinkedIn profiles against a job. I built v1 and shipped 11 releases, closing a cross-account data leak and a billing exploit along the way.",
     ],
     stats: [
