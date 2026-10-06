@@ -28,6 +28,17 @@ export function startJourney(root: HTMLElement, opts: Opts) {
   let tokApi: { encode: (s: string) => number[]; decode: (ids: number[]) => string } | null = null;
   import("gpt-tokenizer/encoding/r50k_base").then((m) => { tokApi = m as any; }).catch(() => {});
 
+  // phones get their own layout: the cloud is fitted, stage by stage, into the space above the bottom panel
+  let PHONE = innerWidth < 760, VH = 6.55, VW = 6.55;
+  const boxes = Array.from({ length: 6 }, () => ({ cx: 0, cy: 0, w: 1, h: 1 }));
+  function measure(k: number) {
+    const a = A[k]; let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, z0 = 1e9, z1 = -1e9;
+    for (let i = 0; i < N; i += 5) { const x = a[i * 3], y = a[i * 3 + 1], z = a[i * 3 + 2]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; if (z < z0) z0 = z; if (z > z1) z1 = z; }
+    const spins = k === 2 || k === 3; // these stages turn slowly, so allow for depth becoming width
+    const lab = k === 1 ? .7 : 0; // room for the id labels under the token rows
+    boxes[k] = { cx: (x0 + x1) / 2, cy: (y0 + y1 - lab) / 2, w: spins ? Math.max(x1 - x0, z1 - z0) * 1.08 : x1 - x0, h: y1 - y0 + lab };
+  }
+
   // ── renderer ──
   const canvas = $<HTMLCanvasElement>("gl") as unknown as HTMLCanvasElement;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
@@ -60,12 +71,15 @@ export function startJourney(root: HTMLElement, opts: Opts) {
     for (let y = 0; y < c.height; y += 2) for (let x = 0; x < c.width; x += 2) if (d[(y * c.width + x) * 4 + 3] > 120) pix.push(x, y);
     const s = 9.03 / tw;
     const bounds: number[] = []; let accw = 0; tokens.forEach(([t]) => { accw += g.measureText(t).width; bounds.push(20 + accw); });
-    const n = tokens.length, last = n - 1, spacing = Math.min(1.25, 9 / n);
+    const n = tokens.length, last = n - 1;
+    const perRow = PHONE && n > 4 ? Math.ceil(n / 2) : n, rows = Math.ceil(n / perRow);
+    const spacing = PHONE ? Math.min(1.25, 6 / perRow) : Math.min(1.25, 9 / n);
     blobPos.length = 0; tokCenters = [];
     tokens.forEach(([, id], j) => {
       const a = hash(id * .013) * 6.283, el = (hash(id * .021) - .5) * 1.4, r = .9 + hash(id * .037) * .9;
       blobPos.push([Math.cos(a) * r, el, Math.sin(a) * r * .8]);
-      tokCenters.push([(j - (n - 1) / 2) * spacing, 0, 0]);
+      const row = Math.floor(j / perRow), col = j % perRow, inRow = row === rows - 1 ? n - perRow * (rows - 1) : perRow;
+      tokCenters.push([(col - (inRow - 1) / 2) * spacing, rows > 1 ? (row === 0 ? .62 : -.78) : 0, 0]);
     });
     attW.length = 0;
     const preset = text === PRESET;
@@ -77,7 +91,7 @@ export function startJourney(root: HTMLElement, opts: Opts) {
       aTok[i] = ti === last ? 1 : 0;
       A[0].set([(px - 20 - tw / 2) * s, -(py - c.height / 2) * s, (hash(i * 9.1) - .5) * .05], i * 3);
       const tc = tokCenters[ti], side = Math.min(.62, spacing * .58);
-      A[1].set([tc[0] + (hash(i * 1.9) - .5) * side, (hash(i * 2.7) - .5) * side, (hash(i * 3.9) - .5) * side], i * 3);
+      A[1].set([tc[0] + (hash(i * 1.9) - .5) * side, tc[1] + (hash(i * 2.7) - .5) * side, (hash(i * 3.9) - .5) * side], i * 3);
       const b = blobPos[ti];
       A[2].set([b[0] + gauss(i, 1) * .22, b[1] + gauss(i, 2) * .22, b[2] + gauss(i, 3) * .22], i * 3);
       const lb = blobPos[last], w = ti === last ? 0 : attW[ti] * 1.4, L = THREE.MathUtils.lerp;
@@ -86,6 +100,7 @@ export function startJourney(root: HTMLElement, opts: Opts) {
     [0, 1, 2, 3].forEach((k) => { (geo.attributes["a" + k] as THREE.BufferAttribute).needsUpdate = true; });
     geo.attributes.aTok.needsUpdate = true; geo.attributes.position.needsUpdate = true;
     buildThreads(); buildTokLabels();
+    [0, 1, 2, 3].forEach((k) => measure(k));
   }
   // layers (real residual norms) and a placeholder figure until the portrait loads
   for (let i = 0; i < N; i++) {
@@ -97,6 +112,7 @@ export function startJourney(root: HTMLElement, opts: Opts) {
     const x = head ? .36 * Math.sin(v) * Math.cos(u) : .86 * Math.sin(v) * Math.cos(u), y = head ? .47 * Math.cos(v) + .62 : Math.max(-.5, -.3 + .34 * Math.cos(v));
     for (let k = 5; k < 9; k++) A[k].set([x * 2.3, y * 2.3 - .35, .3 * Math.sin(v) * Math.sin(u) * 2.3], i * 3);
   }
+  measure(4); measure(5);
   let nPoses = 1;
   async function loadPoses() {
     const got: Uint8Array[] = [];
@@ -117,6 +133,7 @@ export function startJourney(root: HTMLElement, opts: Opts) {
       (geo.attributes["a" + (5 + k)] as THREE.BufferAttribute).needsUpdate = true;
     }
     geo.attributes.aB.needsUpdate = true;
+    measure(5);
     $("note").textContent = nPoses > 1 ? "click the portrait to change the moment" : "made of dots from a photo · depth estimated by a model";
   }
 
@@ -195,7 +212,7 @@ export function startJourney(root: HTMLElement, opts: Opts) {
     tokLabels = tokens.map(([t, id], j) => {
       const el = document.createElement("div"); el.className = "j-lbl tok";
       el.innerHTML = `<span>${esc(t.replace(/^ /, "·"))}</span><br>${id}`;
-      labelsEl.appendChild(el); return { el, p: new THREE.Vector3(tokCenters[j][0], -.62, 0), tok: true };
+      labelsEl.appendChild(el); return { el, p: new THREE.Vector3(tokCenters[j][0], tokCenters[j][1] - .62, 0), tok: true };
     });
   }
   const projLabels: Lbl[] = PROJECT_ANCHORS.map(([name, slug, p]) => {
@@ -226,11 +243,12 @@ export function startJourney(root: HTMLElement, opts: Opts) {
     ev.innerHTML = c.ev.map((e) => e.slug ? `<button type="button" class="j-chip" data-slug="${e.slug}">${esc(e.t)}<i aria-hidden="true">↗</i></button>` : `<span class="j-chip">${esc(e.t)}</span>`).join("");
     [...ev.children].forEach((ch, i) => setTimeout(() => ch.classList.add("on"), 350 + i * 220));
     $("status").textContent = c.st;
-    $("hero").style.display = k <= 1 ? "" : "none";
+    $("hero").style.display = k <= (PHONE ? 0 : 1) ? "" : "none";   // phones: the ask box only on the first screen
     $("cta").classList.toggle("on", k === NCH - 1);
     $("facts").style.opacity = k === NCH - 1 ? "1" : "0"; $("note").style.opacity = k === NCH - 1 ? "1" : "0";
+    $("factsline").classList.toggle("on", k === NCH - 1);
     const feat = $("feature");
-    if (c.feature) { feat.dataset.slug = c.feature; feat.style.opacity = "1"; feat.style.pointerEvents = "auto"; } else { feat.style.opacity = "0"; feat.style.pointerEvents = "none"; }
+    if (c.feature) { feat.dataset.slug = c.feature; feat.style.opacity = "1"; feat.style.pointerEvents = "auto"; feat.hidden = false; } else { feat.style.opacity = "0"; feat.style.pointerEvents = "none"; feat.hidden = PHONE; }
     $("rail").querySelectorAll(".tick").forEach((t, i) => t.classList.toggle("on", i === k));
     snd.chapter(k, attW, pitchOf());
     if (k === NCH - 1) poseAt = performance.now();   // each moment holds before the next one flows in
@@ -271,7 +289,7 @@ export function startJourney(root: HTMLElement, opts: Opts) {
     try { await navigator.clipboard.writeText(person.email); const o = btn.textContent; btn.textContent = "copied ✓"; snd.tone(); setTimeout(() => (btn.textContent = o), 1400); }
     catch { btn.textContent = person.email; }
   };
-  root.querySelectorAll("[data-mail]").forEach((b) => on(b as HTMLElement, "click", () => copyMail(b as HTMLElement)));
+  on(root, "click", (e: MouseEvent) => { const b = (e.target as HTMLElement).closest("[data-mail]") as HTMLElement | null; if (b) copyMail(b); });
 
   // sound toggle
   const sbtn = $("sound");
@@ -297,16 +315,19 @@ export function startJourney(root: HTMLElement, opts: Opts) {
   // resize
   function resize() {
     const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
-    const VH = 2 * Math.tan(THREE.MathUtils.degToRad(20)) * 9, VW = VH * cam.aspect;
-    world.position.y = VH * (MOBILE ? .14 : .155); world.scale.setScalar(Math.min(1, VW / 10.5) * (MOBILE ? .9 : .8));
+    VH = 2 * Math.tan(THREE.MathUtils.degToRad(20)) * 9; VW = VH * cam.aspect;
+    const wasPhone = PHONE; PHONE = w < 760; root.classList.toggle("phone", PHONE);
+    if (!PHONE) { world.position.set(0, VH * .155, 0); world.scale.setScalar(Math.min(1, VW / 10.5) * .8); }
     mat.uniforms.uAspect.value = cam.aspect;
+    if (wasPhone !== PHONE && blobPos.length) retok();
   }
   resize(); on(window, "resize", resize);
 
   // ── one clock ──
   let prog = 0, last = performance.now(), lastProg = 0, raf = 0, dead = false, dimT = 0;
   const factsEls = [...$("facts").children] as HTMLElement[], soundBars = [...sbtn.querySelectorAll("b")] as HTMLElement[];
-  const layerEl = $("layer");
+  const layerEl = $("layer"), progEl = $("prog"), answerEl = root.querySelector(".j-answer") as HTMLElement;
+  let panelTop = innerHeight * .6;
   function frame(now: number) {
     if (dead) return;
     const dt = Math.min(.05, (now - last) / 1000); last = now;
@@ -320,7 +341,18 @@ export function startJourney(root: HTMLElement, opts: Opts) {
     u.uDim.value += (dimT - u.uDim.value) * (1 - Math.exp(-dt * 6));
     if (shownCh === NCH - 1 && nPoses > 1 && now - poseAt > 6500) nextPose();
     setChapter(Math.min(NCH - 1, Math.round(prog - .12)));
-    layerEl.textContent = `layer ${String(CH[shownCh].L).padStart(2, "0")} / 12`;
+    layerEl.textContent = PHONE ? `${CH[shownCh].name} · layer ${String(CH[shownCh].L).padStart(2, "0")}` : `layer ${String(CH[shownCh].L).padStart(2, "0")} / 12`;
+    progEl.style.transform = `scaleX(${Math.max(.02, prog / (NCH - 1))})`;
+    if (PHONE) {
+      panelTop += (answerEl.getBoundingClientRect().top - panelTop) * (1 - Math.exp(-dt * 6));
+      const topPx = 92, botPx = Math.max(topPx + 140, panelTop - 16), upp = VH / innerHeight;
+      const availH = (botPx - topPx) * upp, availW = VW * .9, cyW = (.5 - (topPx + botPx) / 2 / innerHeight) * VH;
+      const k0 = Math.min(5, Math.floor(s)), k1 = Math.min(5, k0 + 1), fk = s - k0;
+      const fit = (k: number) => Math.min(availW / boxes[k].w, availH / boxes[k].h, 1.4);
+      const sc = THREE.MathUtils.lerp(fit(k0), fit(k1), fk);
+      const cx = THREE.MathUtils.lerp(boxes[k0].cx, boxes[k1].cx, fk), cy = THREE.MathUtils.lerp(boxes[k0].cy, boxes[k1].cy, fk);
+      world.scale.setScalar(sc); world.position.set(-cx * sc, cyW - cy * sc, 0);
+    }
     const turn = THREE.MathUtils.smoothstep(s, 1.6, 2.4) * (1 - THREE.MathUtils.smoothstep(s, 3.6, 4.4));
     world.rotation.y += (Math.sin(now / 5200) * .55 * turn + ptr.nx * .12 - world.rotation.y) * (1 - Math.exp(-dt * 3));
     world.rotation.x += (-ptr.ny * .06 - world.rotation.x) * (1 - Math.exp(-dt * 3));
@@ -332,9 +364,9 @@ export function startJourney(root: HTMLElement, opts: Opts) {
     const thrVis = Math.max(0, 1 - Math.abs(s - 3) * 1.6) * (1 - u.uDim.value);
     threads.children.forEach((l: any) => { l.material.opacity = Math.min(1, thrVis * (.35 + l.material.userData.w * 2.4)); });
     world.updateMatrixWorld();
-    const tokVis = Math.max(0, 1 - Math.abs(s - 1) * 2.2), projVis = Math.max(0, 1 - Math.abs(s - 2.5) * 1.1) * (1 - u.uDim.value);
+    const tokVis = Math.max(0, 1 - Math.abs(s - 1) * 2.2), projVis = PHONE ? 0 : Math.max(0, 1 - Math.abs(s - 2.5) * 1.1) * (1 - u.uDim.value);
     tokLabels.forEach((l) => place(l, tokVis)); projLabels.forEach((l) => place(l, projVis));
-    if (s > 4.6) {
+    if (s > 4.6 && !PHONE) {
       const anchors = [[-.7, 1.25], [.72, .75], [-1.45, -.7], [1.45, -1.0]];
       factsEls.forEach((el, k) => {
         v3.set(anchors[k][0], anchors[k][1], 0).applyMatrix4(world.matrixWorld).project(cam);

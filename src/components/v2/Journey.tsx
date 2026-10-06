@@ -11,6 +11,7 @@ export default function Journey() {
   const engine = useRef<Engine | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [shown, setShown] = useState(false);
+  const [menu, setMenu] = useState(false);
   const lastFocus = useRef<HTMLElement | null>(null);
 
   const openCase = useCallback((slug: string) => {
@@ -65,6 +66,8 @@ export default function Journey() {
             </nav>
             <div className="j-layer" data-j="layer">layer 00 / 12</div>
           </div>
+          <button type="button" className="j-menu-btn" aria-expanded={menu} onClick={() => setMenu(true)}>menu</button>
+          <div className="j-prog" aria-hidden="true"><i data-j="prog" /></div>
         </header>
         <nav className="j-rail" data-j="rail" aria-label="Chapters" />
         <div data-j="labels" />
@@ -83,11 +86,12 @@ export default function Journey() {
           <div className="j-cta" data-j="cta">
             <button type="button" className="primary" data-mail>{person.email}</button>
             <a href="/work/">all work</a>
-            <a href="/cv/">CV, one page</a>
+            <a href="/cv/">CV</a>
             <a href={person.github} target="_blank" rel="noreferrer">GitHub</a>
             <a href={person.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>
           </div>
           <div className="j-note" data-j="note">made of dots from a photo · depth estimated by a model</div>
+          <div className="j-factsline" data-j="factsline">{FACTS.join("  ·  ")}</div>
         </div>
         <div className="j-status" data-j="status" />
         <button type="button" className="j-sound" data-j="sound" aria-pressed="false"><i><b /><b /><b /><b /></i><span>sound off</span></button>
@@ -100,6 +104,21 @@ export default function Journey() {
         {chapters.map((c) => <p key={c.name}>{c.ans} {c.ev.map((e) => e.t).join(". ")}</p>)}
         <ul>{projects.map((pr) => <li key={pr.slug}><a href={`/work/${pr.slug}/`}>{pr.title}</a>: {pr.line}</li>)}</ul>
       </section>
+
+      {menu && (
+        <div className="j-menu" role="dialog" aria-modal="true" aria-label="Menu">
+          <button type="button" className="j-menu-close" onClick={() => setMenu(false)} autoFocus>close</button>
+          <nav>
+            <a href="/work/">Work</a>
+            <a href="/cv/">CV</a>
+            <button type="button" data-mail>{person.email}</button>
+            <a href={person.github} target="_blank" rel="noreferrer">GitHub</a>
+            <a href={person.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>
+            <a href="/colophon/">How this site works</a>
+          </nav>
+          <p>{person.name} · {person.role} · {person.location}</p>
+        </div>
+      )}
 
       {p && (
         <>
