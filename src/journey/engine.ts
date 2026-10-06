@@ -229,6 +229,7 @@ export function startJourney(root: HTMLElement, opts: Opts) {
 
   // ── sound ──
   const snd = createSound();
+  if (location.search.includes("audiodebug")) (window as any).__fpSound = snd;
   const pitchOf = () => tokens.map((t) => t[1]);
 
   // ── answer line + chapter UI ──
