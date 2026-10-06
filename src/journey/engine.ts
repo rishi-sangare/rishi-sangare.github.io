@@ -13,13 +13,13 @@ const hash = (n: number) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453
 const gauss = (i: number, k: number) => { const u = Math.max(1e-6, hash(i * 1.37 + k)), v = hash(i * 2.11 + k + 7); return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.283 * v); };
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 const GL = "▮▯<>/\\=+*#%&01{}[]·:;_~";
-const POSES = ["/poses/pose-front.txt"]; // more moments (looking up, profile, coffee) slot in here
+const POSES = ["/poses/pose-front.txt", "/poses/pose-up.txt", "/poses/pose-coffee.txt"]; // add the side profile here when its photo is available
 
 export function startJourney(root: HTMLElement, opts: Opts) {
   const $ = <T extends HTMLElement = HTMLElement>(k: string) => root.querySelector(`[data-j="${k}"]`) as T;
   const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const MOBILE = matchMedia("(max-width: 700px)").matches || matchMedia("(hover: none)").matches;
-  const N = MOBILE ? 12000 : 34000;
+  const N = MOBILE ? 20000 : 56000;
   const disposers: (() => void)[] = [];
   const on = <K extends keyof WindowEventMap>(t: Window | Document | HTMLElement, ev: K | string, fn: (e: any) => void, o?: AddEventListenerOptions) => { t.addEventListener(ev, fn, o); disposers.push(() => t.removeEventListener(ev, fn)); };
   const serif = getComputedStyle(document.documentElement).getPropertyValue("--font-newsreader").trim() || "Georgia";
@@ -151,13 +151,13 @@ export function startJourney(root: HTMLElement, opts: Opts) {
           float w = exp(-dot(d, d) / .006) * (1. - uTrail[k].z);
           push += normalize(d + 1e-5) * w;
         }
-        gl_Position.xy += push * .035 * gl_Position.w * (1. - uRM);
+        gl_Position.xy += push * .035 * mix(1., .35, e(uS - 4.)) * gl_Position.w * (1. - uRM);   // gentler on the portrait
         float depth = clamp((-mv.z - 6.) / 6., 0., 1.);
-        vA = mix(.95, .35, depth) * (.55 + .45 * aR);
+        vA = mix(.95, .35, depth) * (.55 + .45 * aR) * mix(.72, 1., e(uS - 4.));   // more dots overall, so earlier stages are a touch fainter
         float lit = mix(bri(uFrom), bri(uTo), pt);
         vA *= mix(1., pow(lit, 1.6) * 1.45, e(uS - 4.)) * (1. - .78 * uDim);
         vAcc = aTok;
-        gl_PointSize = uSize * uPix * (.65 + aR * .7) / -mv.z * mix(1., .82, e(uS - 4.));
+        gl_PointSize = uSize * uPix * (.65 + aR * .7) / -mv.z * mix(1., .7, e(uS - 4.));
       }`,
     fragmentShader: /* glsl */ `
       uniform vec3 uBone, uAcc; varying float vA; varying float vAcc;
@@ -233,6 +233,7 @@ export function startJourney(root: HTMLElement, opts: Opts) {
     if (c.feature) { feat.dataset.slug = c.feature; feat.style.opacity = "1"; feat.style.pointerEvents = "auto"; } else { feat.style.opacity = "0"; feat.style.pointerEvents = "none"; }
     $("rail").querySelectorAll(".tick").forEach((t, i) => t.classList.toggle("on", i === k));
     snd.chapter(k, attW, pitchOf());
+    if (k === NCH - 1) poseAt = performance.now();   // each moment holds before the next one flows in
   }
   function tickDecode(now: number) {
     if (!job) return;

@@ -177,6 +177,36 @@ export const projects: Project[] = [
     links: [{ href: "https://huggingface.co/Rishi-19", label: "Models on Hugging Face" }],
   },
   {
+    slug: "studio",
+    title: "The Studio: an AI content engine",
+    org: "My own content business",
+    role: "Built it, run it",
+    when: "Sep 2026 – now",
+    line: "One engine runs several short-video channels: an AI agent drafts, local models render, and nothing goes out without my approval.",
+    numbers: [
+      { v: "7,400+", l: "views on the first 6 Shorts" },
+      { v: "3", l: "channels warming up" },
+      { v: "20", l: "clips made as versioned recipes" },
+      { v: "7k", l: "lines of Python, plus a Remotion motion layer" },
+    ],
+    sections: [
+      { h: "What it is", body: "A shared Studio core with one module per content stream: paid clip campaigns, a faceless AI-news channel, and an AI-presenter reel. Each stream plugs into the same database, job queue, renderer, scheduler and publisher." },
+      { h: "The engine", items: [
+        "Every clip is a versioned recipe: a timeline in JSON. A tweak edits the recipe, never pixels, and every version is kept.",
+        "Rendering: recipe to video with ffmpeg and Remotion, with speech-to-text captions (Parakeet on MLX), scene detection, subject cut-outs and smart reframing.",
+        "Local generative models on a Mac: image (Z-Image, FLUX.2-klein), video (LTX), voice (Qwen3-TTS) and upscaling (SeedVR2).",
+        "A local dashboard and Telegram inbox: I approve clips, leave notes at exact moments, and answer one-tap questions from the agent.",
+        "Claude operates the Studio through its own skills; YouTube analytics snapshots feed back into what gets made next.",
+      ] },
+      { h: "Rules I built in", items: [
+        "Nothing is published without my approval. Agents write drafts only.",
+        "Platform tokens live in the macOS Keychain and are read only by the publisher, never in prompts, the database or chat.",
+        "No automating platforms whose terms forbid it, and only original characters and voices.",
+      ] },
+    ],
+    stack: ["Python", "SQLite", "ffmpeg", "Remotion", "MLX", "Parakeet", "Qwen3-TTS", "LTX", "FLUX", "MediaPipe", "rembg", "Claude Code"],
+  },
+  {
     slug: "freelance",
     title: "Freelance: agent evals and automations",
     org: "Upwork",
@@ -211,11 +241,12 @@ export const sequence: Tok[] = [
   { t: "Copilot", slug: "recruiter-copilot" },
   { t: "CRM · UK", slug: "crm-migration" },
   { t: "Upwork", yr: "'26", slug: "freelance" },
+  { t: "Studio", slug: "studio" },
   { t: "▮", yr: "next" },
 ];
 /** How later work drew on earlier work. My judgment, not model attention. */
 export const arcs: Record<number, [number, number][]> = {
-  5: [[1, .5], [4, .6]], 6: [[1, .45], [5, .75]], 7: [[4, .5], [6, .45]], 8: [[7, .65]], 9: [[4, .5]], 10: [[6, .4]], 11: [[5, .45], [6, .6], [7, .5]],
+  5: [[1, .5], [4, .6]], 6: [[1, .45], [5, .75]], 7: [[4, .5], [6, .45]], 8: [[7, .65]], 9: [[4, .5]], 10: [[6, .4]], 11: [[1, .45], [6, .4], [8, .3]], 12: [[5, .45], [6, .6], [7, .5], [11, .35]],
 };
 
 export const person = {

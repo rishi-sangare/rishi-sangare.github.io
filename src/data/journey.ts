@@ -62,6 +62,7 @@ export const chapters: Chapter[] = [
 export const PROJECT_ANCHORS: [string, string, [number, number, number]][] = [
   ["Tamago matching", "tamago", [-2.6, .9, -.4]], ["RefineCV", "refinecv", [2.5, 1.2, .2]], ["Recruiter Copilot", "recruiter-copilot", [2.7, -.8, -.3]],
   ["CRM migration", "crm-migration", [-2.5, -1.0, .5]], ["Mitwa DPO", "mitwa", [-.6, 2.0, -1.2]], ["Evals", "evals", [.9, 2.1, -1.0]],
+  ["Content Studio", "studio", [-.2, -2.0, .8]],
 ];
 
 export const FACTS = ["AI / LLM engineer", "Mumbai · works US hours", "LLM products for Japan and the UK", "open to full-time remote"];
