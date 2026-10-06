@@ -205,7 +205,7 @@ export function startJourney(root: HTMLElement, opts: Opts) {
 
   // DOM labels riding 3D anchors
   const labelsEl = $("labels");
-  type Lbl = { el: HTMLElement; p: THREE.Vector3; tok?: boolean };
+  type Lbl = { el: HTMLElement; p: THREE.Vector3; tok?: boolean; pm?: THREE.Vector3; w?: number };
   let tokLabels: Lbl[] = [];
   function buildTokLabels() {
     tokLabels.forEach((l) => l.el.remove());
@@ -218,9 +218,25 @@ export function startJourney(root: HTMLElement, opts: Opts) {
   const projLabels: Lbl[] = PROJECT_ANCHORS.map(([name, slug, p]) => {
     const el = document.createElement("button"); el.type = "button"; el.className = "j-lbl proj"; el.textContent = name;
     el.onclick = () => opts.onOpen(slug);
-    labelsEl.appendChild(el); return { el, p: new THREE.Vector3(...p) };
+    labelsEl.appendChild(el); return { el, p: new THREE.Vector3(...p), pm: new THREE.Vector3(p[0] * .6, p[1] * .86, p[2]) };
   });
   const v3 = new THREE.Vector3();
+  // phones: project labels sit closer to the clouds, stay inside the screen, and nudge apart so none overlap
+  function placePhoneLabels(alpha: number, top: number, bottom: number) {
+    const W = innerWidth, H = innerHeight, rows: { l: Lbl; x: number; y: number; w: number }[] = [];
+    projLabels.forEach((l) => {
+      v3.copy(l.pm!).applyMatrix4(world.matrixWorld).project(cam);
+      l.w = l.w || l.el.offsetWidth + 6;
+      rows.push({ l, x: Math.min(Math.max(12, (v3.x * .5 + .5) * W - 4), W - 12 - l.w), y: (-v3.y * .5 + .5) * H, w: l.w });
+    });
+    rows.sort((a, b) => a.y - b.y);
+    rows.forEach((r, i) => {
+      r.y = Math.min(Math.max(r.y, top), bottom);
+      for (let j = 0; j < i; j++) { const o = rows[j]; if (r.x < o.x + o.w && o.x < r.x + r.w && Math.abs(r.y - o.y) < 20) r.y = o.y + 20; }
+      r.l.el.style.transform = `translate(${r.x}px, ${r.y}px) translate(0, -50%)`;
+      r.l.el.style.opacity = String(r.y > bottom + 4 ? 0 : alpha); r.l.el.style.pointerEvents = alpha > .5 ? "auto" : "none";
+    });
+  }
   const place = (l: Lbl, alpha: number) => {
     v3.copy(l.p).applyMatrix4(world.matrixWorld).project(cam);
     l.el.style.transform = `translate(${(v3.x * .5 + .5) * innerWidth}px, ${(-v3.y * .5 + .5) * innerHeight}px) translate(${l.tok ? "-50%" : "-4px"}, -50%)`;
@@ -365,8 +381,11 @@ export function startJourney(root: HTMLElement, opts: Opts) {
     const thrVis = Math.max(0, 1 - Math.abs(s - 3) * 1.6) * (1 - u.uDim.value);
     threads.children.forEach((l: any) => { l.material.opacity = Math.min(1, thrVis * (.35 + l.material.userData.w * 2.4)); });
     world.updateMatrixWorld();
-    const tokVis = Math.max(0, 1 - Math.abs(s - 1) * 2.2), projVis = PHONE ? 0 : Math.max(0, 1 - Math.abs(s - 2.5) * 1.1) * (1 - u.uDim.value);
-    tokLabels.forEach((l) => place(l, tokVis)); projLabels.forEach((l) => place(l, projVis));
+    const tokVis = Math.max(0, 1 - Math.abs(s - 1) * 2.2), projVis = Math.max(0, 1 - Math.abs(s - 2.5) * 1.1) * (1 - u.uDim.value);
+    tokLabels.forEach((l) => place(l, tokVis));
+    if (!PHONE) projLabels.forEach((l) => place(l, projVis));
+    else if (projVis > .01) placePhoneLabels(projVis, 92 + 6, panelTop - 26);
+    else projLabels.forEach((l) => { l.el.style.opacity = "0"; l.el.style.pointerEvents = "none"; });
     if (s > 4.6 && !PHONE) {
       const anchors = [[-.7, 1.25], [.72, .75], [-1.45, -.7], [1.45, -1.0]];
       factsEls.forEach((el, k) => {

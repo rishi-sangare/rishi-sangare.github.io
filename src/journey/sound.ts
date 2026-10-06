@@ -12,6 +12,7 @@ type Profile = "full" | "small";
 const PENT = [0, 2, 4, 7, 9];
 const pitch = (id: number) => 220 * Math.pow(2, (PENT[id % 5] + 12 * (Math.floor(id / 5) % 2)) / 12);
 const STEPS = [0, 0, 3, 5, 7, 12];
+const STEPS_SMALL = [0, 0, 2, 3, 5, 7];
 
 function pickProfile(): Profile {
   const q = new URLSearchParams(location.search).get("audio");
@@ -24,12 +25,12 @@ function pickProfile(): Profile {
 const P = {
   // drone base, harmonic amplitudes (1st..6th), voice gains, tone filter, air limits, attention octave
   full: { base: 55, harm: [1, 0, 0, 0, 0, 0], voices: [.16, .07, .025], lp: 700, hp: 30, airMax: .09, airLo: 600, airHi: 3000, attOct: .5, master: .55 },
-  small: { base: 110, harm: [.55, 1, .8, .55, .32, .18], voices: [.09, .045, .02], lp: 1500, hp: 140, airMax: .03, airLo: 350, airHi: 1400, attOct: 1, master: .6 },
+  small: { base: 110, harm: [.6, 1, .7, .4, .2, .1], voices: [.09, .045, .02], lp: 1100, hp: 140, airMax: .022, airLo: 300, airHi: 1000, attOct: 1, master: .27 },
 } as const;
 
 export function createSound() {
   let ac: AudioContext | null = null, master!: GainNode, bus!: GainNode, airGain!: GainNode, airLp!: BiquadFilterNode, analyser!: AnalyserNode;
-  const drone: OscillatorNode[] = [];
+  const drone: OscillatorNode[] = [], droneGains: GainNode[] = [];
   let on = false, velS = 0;
   const prof: Profile = typeof window === "undefined" ? "full" : pickProfile();
   const cfg = P[prof];
@@ -43,7 +44,7 @@ export function createSound() {
     comp.threshold.value = -20; comp.knee.value = 14; comp.ratio.value = 3; comp.attack.value = .01; comp.release.value = .3;
     const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = cfg.hp; hp.Q.value = .5;
     analyser = ac.createAnalyser(); analyser.fftSize = 8192;
-    if (prof === "small") { master.connect(comp); comp.connect(hp); hp.connect(ac.destination); hp.connect(analyser); }
+    if (prof === "small") { master.connect(hp); hp.connect(ac.destination); hp.connect(analyser); void comp; }
     else { master.connect(ac.destination); master.connect(analyser); }
 
     const rev = ac.createConvolver(), len = ac.sampleRate * 2.6, ir = ac.createBuffer(2, len, ac.sampleRate);
@@ -60,7 +61,7 @@ export function createSound() {
       const o = ac!.createOscillator(), g = ac!.createGain();
       if (prof === "small") { o.setPeriodicWave(wave); g.connect(tone); }
       else { o.type = i === 2 ? "triangle" : "sine"; g.connect(bus); }
-      o.frequency.value = f; g.gain.value = cfg.voices[i]; o.connect(g); o.start(); drone.push(o);
+      o.frequency.value = f; g.gain.value = cfg.voices[i]; o.connect(g); o.start(); drone.push(o); droneGains.push(g);
     });
     if (prof === "small") { // a slow breathing swell on the drone so it never feels static
       const lfo = ac.createOscillator(), lfoG = ac.createGain(); lfo.frequency.value = .07; lfoG.gain.value = cfg.lp * .18;
@@ -80,6 +81,7 @@ export function createSound() {
   }
   function blip(f: number, t0 = 0, dur = .5, vol = .12, type: OscillatorType = "triangle") {
     if (!on || !ac) return;
+    if (prof === "small") vol *= .45;
     const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + t0;
     o.type = type; o.frequency.value = f;
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
@@ -102,8 +104,9 @@ export function createSound() {
     },
     chapter(k: number, att: number[], ids: number[]) {
       if (!on) return;
-      const f = cfg.base * Math.pow(2, (STEPS[k] ?? 0) / 12);
+      const f = cfg.base * Math.pow(2, ((prof === "small" ? STEPS_SMALL : STEPS)[k] ?? 0) / 12);
       ramp(drone[0].frequency, f, .6); ramp(drone[1].frequency, f * 1.5, .6); ramp(drone[2].frequency, f * 2.006, .6);
+      if (prof === "small") droneGains.forEach((g, i) => ramp(g.gain, cfg.voices[i] * Math.pow(cfg.base / f, 1.2), .6));
       if (k === 3) att.forEach((w, j) => blip(pitch(ids[j]) * cfg.attOct, j * .05, 1.6, .03 + w * .12, prof === "small" ? "triangle" : "sine"));
     },
     lock(final: boolean) { if (final) [261.6, 329.6, 392, 523.3].forEach((f, i) => blip(f, i * .07, 2.4, .07, "sine")); else blip(660, 0, .25, .04, "sine"); },
