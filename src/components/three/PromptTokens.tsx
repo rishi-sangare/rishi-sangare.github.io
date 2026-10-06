@@ -46,7 +46,7 @@ export function PromptTokens() {
     const t = clock.elapsedTime;
     group.current.rotation.y = state.pointer.x * 0.18;
     group.current.rotation.x = -state.pointer.y * 0.08;
-    group.current.position.set(narrow ? 0 : 2.2, sceneY(0) + (narrow ? 4.6 : 2.35) + Math.sin(t * 0.6) * 0.06 + state.local.prompt * 2.5, -1.5);
+    group.current.position.set(narrow ? 0 : 2.2, sceneY(0) + (narrow ? 3.3 : 2.35) + Math.sin(t * 0.6) * 0.06 + state.local.prompt * 2.5, -1.5);
     group.current.scale.setScalar(narrow ? scale * 0.62 : scale);
     if (arcMat.current) arcMat.current.opacity = v * (0.65 + 0.35 * Math.sin(t * 1.4));
     group.current.children.forEach((c) => {
