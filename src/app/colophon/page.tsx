@@ -2,20 +2,19 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "How Forward Pass was built",
-  description: "The engineering behind rishi-sangare's portfolio: real GPT-2 attention, in-browser embeddings, React Three Fiber and GSAP.",
+  description: "How Rishi Sangare's portfolio works: a GPU dot cloud, GPT-2's real tokenizer and attention, a dot portrait from photos, and generated sound.",
 };
 
 const rows: [string, string][] = [
-  ["Tokenizer", "GPT-2 BPE via Transformers.js, running in your browser. The ids you see on the first screen are real."],
-  ["Embeddings", "all-MiniLM-L6-v2 (q8), WebGPU with a WASM fallback. Your question is embedded live and projected into the same 3D PCA basis as my project write-ups, which were embedded in Python with the same model."],
-  ["Attention, residual norms, logits", "Exported from GPT-2 small (124M) with PyTorch + Hugging Face for four preset prompts: 12 layers × 12 heads of real attention, residual-stream norms per layer, and the top-40 next-token logits. Temperature is applied live in the browser."],
-  ["253,541 particles", "One point per migrated activity record, animated in a custom vertex shader (one per four records on phones)."],
-  ["3D", "three.js r186, React Three Fiber 9, drei (instancing, troika text, MeshTransmissionMaterial for the glass lens), postprocessing (bloom, grain, vignette)."],
-  ["Motion", "GSAP 3.15 (SplitText, ScrollTrigger) with Lenis smooth scroll on native scrolling. Scroll writes to a shared mutable store; the render loop reads it, so React never re-renders per frame."],
-  ["Performance", "GPU tiering with detect-gpu, drei PerformanceMonitor + AdaptiveDpr, capped DPR, scenes hidden when off-screen, models loaded after first paint. Reduced-motion and weak GPUs get the same story without WebGL."],
-  ["Framework & hosting", "Next.js 16 static export. No server: everything you see runs on your device."],
-  ["How it was made", "Designed and built with Claude Code as a pair: research across skills/MCPs/award sites, a written plan, then scene-by-scene build with screenshot-and-critique loops. Every number on the site comes from real git history, reconciliation reports or eval runs."],
-  ["Credits", "3D LLM layout inspired by Brendan Bycroft's LLM Visualization (MIT). Interaction ideas from Georgia Tech's Transformer Explainer."],
+  ["The dot cloud", "One three.js Points object with a custom shader. Every dot carries six target positions (your question, its tokens, meaning space, attention, the twelve layers, the portrait) and eases between them with its own small delay, so shapes melt instead of snapping."],
+  ["Tokenizer", "GPT-2's real byte-pair encoding (r50k), running in your browser. The ids you see are the ones GPT-2 would use, including for any question you type."],
+  ["Attention and layers", "Exported from GPT-2 small (124M) with PyTorch for the preset question: the attention threads use layer 12's real weights for \"?\", and the twelve rings are sized by the real residual-stream norm at each layer."],
+  ["The answer line", "Written in the style of a logit lens (reading a model's guess at each layer). The guesses are mine; the evidence under them is real."],
+  ["The portrait", "From two photos: the person cut out with a segmentation model, depth estimated with Depth Anything V2, then stippled by brightness and edges so the glasses and curls survive. The photos themselves are not on the site, only the dot positions."],
+  ["Motion", "One clock: scroll feeds a single damped progress value, and everything (dots, camera, text, sound) is computed from it, so nothing lags behind anything else. The cursor pushes dots aside along a short trail."],
+  ["Sound", "Generated live with the Web Audio API, off until you turn it on: each token's pitch comes from its id, a drone rises a step per layer, scroll speed drives the air, and the answer resolves on a chord."],
+  ["Framework and hosting", "Next.js static export on GitHub Pages. No server: everything runs on your device. Reduced-motion settings get the same story without the motion."],
+  ["How it was made", "Designed and built with Claude Code as a pair: research, concept sketches, a playable prototype, then the build, with screenshot checks at every step. Every number on the site comes from real git history, reconciliation reports or eval runs."],
 ];
 
 export default function Colophon() {
@@ -35,7 +34,7 @@ export default function Colophon() {
         ))}
       </dl>
       <p className="mt-8 font-mono text-[12.5px] text-[var(--text-3)]">
-        Data export script: <code>scripts/export.py</code> in the repo.
+        The data export script is <code>scripts/export.py</code> in the repo.
       </p>
     </main>
   );

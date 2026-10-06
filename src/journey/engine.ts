@@ -13,7 +13,7 @@ const hash = (n: number) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453
 const gauss = (i: number, k: number) => { const u = Math.max(1e-6, hash(i * 1.37 + k)), v = hash(i * 2.11 + k + 7); return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.283 * v); };
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 const GL = "▮▯<>/\\=+*#%&01{}[]·:;_~";
-const POSES = ["/poses/pose-front.txt", "/poses/pose-up.txt", "/poses/pose-coffee.txt"]; // add the side profile here when its photo is available
+const POSES = ["/poses/pose-front.txt", "/poses/pose-up.txt"]; // add the side profile here when its photo is available
 
 export function startJourney(root: HTMLElement, opts: Opts) {
   const $ = <T extends HTMLElement = HTMLElement>(k: string) => root.querySelector(`[data-j="${k}"]`) as T;
