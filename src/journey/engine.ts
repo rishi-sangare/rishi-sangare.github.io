@@ -381,7 +381,7 @@ export function startJourney(root: HTMLElement, opts: Opts) {
     const thrVis = Math.max(0, 1 - Math.abs(s - 3) * 1.6) * (1 - u.uDim.value);
     threads.children.forEach((l: any) => { l.material.opacity = Math.min(1, thrVis * (.35 + l.material.userData.w * 2.4)); });
     world.updateMatrixWorld();
-    const tokVis = Math.max(0, 1 - Math.abs(s - 1) * 2.2), projVis = Math.max(0, 1 - Math.abs(s - 2.5) * 1.1) * (1 - u.uDim.value);
+    const tokVis = Math.max(0, 1 - Math.abs(s - 1) * 2.2), projVis = Math.min(1, Math.max(0, 1.6 - Math.abs(s - 2.5) * 1.3)) * (1 - u.uDim.value);   // fully on through embed and attend
     tokLabels.forEach((l) => place(l, tokVis));
     if (!PHONE) projLabels.forEach((l) => place(l, projVis));
     else if (projVis > .01) placePhoneLabels(projVis, 92 + 6, panelTop - 26);
